@@ -6,18 +6,18 @@
 
 struct elevator elevator;
 
-const char *elevator_state_name(enum elevator_state state)
+const char *elevator_state_name(enum elevator_status state)
 {
 	switch (state) {
-	case OFFLINE:
+	case ELEVATOR_OFFLINE:
 		return "OFFLINE";
-	case IDLE:
+	case ELEVATOR_IDLE:
 		return "IDLE";
-	case LOADING:
+	case ELEVATOR_LOADING:
 		return "LOADING";
-	case UP:
+	case ELEVATOR_UP:
 		return "UP";
-	case DOWN:
+	case ELEVATOR_DOWN:
 		return "DOWN";
 	}
 	return "UNKNOWN";
@@ -27,18 +27,18 @@ static int elevator_run_once(void)
 {
 	int delay_ms;
 
-	if (elevator.state == OFFLINE)
+	if (elevator_state.status == ELEVATOR_OFFLINE)
 		return IDLE_POLL_MS;
 
-	if (elevator.deactivating && elevator.num_on_board == 0) {
-		elevator.state = OFFLINE;
+	if (elevator.deactivating && elevator_state.passenger_count == 0) {
+		elevator_state.status = ELEVATOR_OFFLINE;
 		elevator.deactivating = false;
 		return IDLE_POLL_MS;
 	}
 
 	delay_ms = elevator_next_action();
 	if (delay_ms == 0) {
-		elevator.state = IDLE;
+		elevator_state.status = ELEVATOR_IDLE;
 		return IDLE_POLL_MS;
 	}
 	return delay_ms;
@@ -50,18 +50,19 @@ static int elevator_thread_fn(void *data)
 	bool acting;
 
 	while (!kthread_should_stop()) {
-		mutex_lock(&elevator.lock);
+		mutex_lock(&elevator_state.lock);
 		delay_ms = elevator_run_once();
-		acting = elevator.state == LOADING || elevator.state == UP ||
-			 elevator.state == DOWN;
-		mutex_unlock(&elevator.lock);
+		acting = elevator_state.status == ELEVATOR_LOADING ||
+			 elevator_state.status == ELEVATOR_UP ||
+			 elevator_state.status == ELEVATOR_DOWN;
+		mutex_unlock(&elevator_state.lock);
 
 		msleep(delay_ms);
 
 		if (acting) {
-			mutex_lock(&elevator.lock);
+			mutex_lock(&elevator_state.lock);
 			elevator_complete_action();
-			mutex_unlock(&elevator.lock);
+			mutex_unlock(&elevator_state.lock);
 		}
 	}
 	return 0;
@@ -69,13 +70,9 @@ static int elevator_thread_fn(void *data)
 
 int elevator_thread_init(void)
 {
-	mutex_init(&elevator.lock);
-	elevator.state = OFFLINE;
-	elevator.current_floor = MIN_FLOOR;
-	elevator.current_load = 0;
-	elevator.num_on_board = 0;
-	elevator.num_serviced = 0;
 	elevator.deactivating = false;
+	elevator.direction = ELEVATOR_UP;
+	elevator.num_serviced = 0;
 
 	elevator.kthread = kthread_run(elevator_thread_fn, NULL, "elevator");
 	if (IS_ERR(elevator.kthread)) {
@@ -93,26 +90,27 @@ void elevator_thread_exit(void)
 		kthread_stop(elevator.kthread);
 		elevator.kthread = NULL;
 	}
-	mutex_lock(&elevator.lock);
-	elevator.state = OFFLINE;
-	mutex_unlock(&elevator.lock);
+	mutex_lock(&elevator_state.lock);
+	elevator_state.status = ELEVATOR_OFFLINE;
+	mutex_unlock(&elevator_state.lock);
 }
 
 int elevator_activate(void)
 {
 	int ret = 0;
 
-	mutex_lock(&elevator.lock);
-	if (elevator.state != OFFLINE) {
+	mutex_lock(&elevator_state.lock);
+	if (elevator_state.status != ELEVATOR_OFFLINE) {
 		ret = 1;
 	} else {
-		elevator.state = IDLE;
-		elevator.current_floor = MIN_FLOOR;
-		elevator.current_load = 0;
-		elevator.num_on_board = 0;
+		elevator_state.status = ELEVATOR_IDLE;
+		elevator_state.current_floor = 1;
+		elevator_state.current_weight = 0;
+		elevator_state.passenger_count = 0;
+		elevator.direction = ELEVATOR_UP;
 		elevator.deactivating = false;
 	}
-	mutex_unlock(&elevator.lock);
+	mutex_unlock(&elevator_state.lock);
 	return ret;
 }
 
@@ -120,11 +118,11 @@ int elevator_deactivate(void)
 {
 	int ret = 0;
 
-	mutex_lock(&elevator.lock);
-	if (elevator.state == OFFLINE || elevator.deactivating)
+	mutex_lock(&elevator_state.lock);
+	if (elevator_state.status == ELEVATOR_OFFLINE || elevator.deactivating)
 		ret = 1;
 	else
 		elevator.deactivating = true;
-	mutex_unlock(&elevator.lock);
+	mutex_unlock(&elevator_state.lock);
 	return ret;
 }

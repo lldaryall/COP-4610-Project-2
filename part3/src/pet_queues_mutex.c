@@ -107,6 +107,3 @@ void elevator_shared_cleanup(void)
 
 	mutex_destroy(&elevator_state.lock);
 }
-
-
-

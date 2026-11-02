@@ -1,4 +1,4 @@
- ## Part 2: My Build and Verification Record
+## Part 2: My Build and Verification Record
 
 ## Environment
 

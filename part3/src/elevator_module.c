@@ -22,14 +22,12 @@ static int __init elevator_init(void)
 		return err;
 	}
 
-	/* Last step: syscalls can now only reach fully initialized state. */
 	elevator_syscalls_register();
 	return 0;
 }
 
 static void __exit elevator_exit(void)
 {
-	/* First step: no new syscall can arrive during teardown. */
 	elevator_syscalls_unregister();
 	elevator_proc_exit();
 	elevator_thread_exit();

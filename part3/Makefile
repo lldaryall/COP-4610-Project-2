@@ -4,7 +4,9 @@ elevator-objs := src/elevator_module.o src/elevator_thread.o src/elevator_sched.
 
 ccflags-y := -I$(src)/src
 
-KDIR := /lib/modules/$(shell uname -r)/build
+KDIR ?= /lib/modules/$(shell uname -r)/build
+
+.PHONY: all clean
 
 all:
 	$(MAKE) -C $(KDIR) M=$(CURDIR) modules

@@ -104,7 +104,6 @@ int elevator_activate(void)
 		ret = 1;
 	} else {
 		elevator_state.status = ELEVATOR_IDLE;
-		elevator_state.current_floor = 1;
 		elevator_state.current_weight = 0;
 		elevator_state.passenger_count = 0;
 		elevator.direction = ELEVATOR_UP;

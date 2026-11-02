@@ -1,4 +1,3 @@
-/* Shared elevator state for the elevator module's thread, syscalls and procfs. */
 #ifndef ELEVATOR_SHARED_H
 #define ELEVATOR_SHARED_H
 
@@ -39,29 +38,21 @@ struct elevator_floor {
 };
 
 struct elevator_shared_state {
-	/* Protects every field and every list in this structure. */
 	struct mutex lock;
 	struct elevator_floor floors[ELEVATOR_FLOOR_COUNT];
 	struct list_head passengers;
 	unsigned int passenger_count;
 	int current_weight;
-	int current_floor; /* Floors are numbered 1 through ELEVATOR_FLOOR_COUNT. */
+	int current_floor;
 	enum elevator_status status;
 };
 
 extern struct elevator_shared_state elevator_state;
 
-/* Call during module initialization, before starting the elevator thread. */
 void elevator_shared_init(void);
-
-/* Queue one request at the tail of its start-floor FIFO. */
 int elevator_queue_request(int start_floor, int destination_floor, int type);
-
-/* Free every queued and onboard pet. Call after stopping the elevator thread. */
 void elevator_shared_cleanup(void);
-
-/* Pet names and weights, indexed by enum pet_type. */
 const char *elevator_pet_name(enum pet_type type);
 int elevator_pet_weight(enum pet_type type);
 
-#endif /* ELEVATOR_SHARED_H */
+#endif

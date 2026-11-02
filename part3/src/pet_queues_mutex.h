@@ -17,7 +17,6 @@ enum elevator_status {
 	ELEVATOR_DOWN,
 };
 
-/* Values match the four pet types used by the supplied producer example. */
 enum pet_type {
 	PET_CHIHUAHUA = 0,
 	PET_PUG,

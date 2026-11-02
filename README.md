@@ -168,7 +168,6 @@ when it unloads. Each handler calls `elevator_activate()`, `elevator_queue_reque
 or `elevator_deactivate()`.
 
 ## Development Log
-TODO: each member adds dated entries.
 
 ### Darya Pylypenko
 
@@ -186,6 +185,14 @@ TODO: each member adds dated entries.
 
 ### Cole Dunlop
 
+| Date | Work Completed / Notes |
+|------|------------------------|
+| 2026-10-29 | Part 1: wrote `empty.c` and `part1.c` (adds `write`, `getpid`, `getppid`, `getuid`, `getgid`; avoids stdio so the count stays exact) and a Makefile whose `make check` traces both and verifies a difference of 5 |
+| 2026-10-29 | Part 3a: wrote kernel-side `syscalls.c` for syscalls 548-550, forwarding through exported `STUB_*` function pointers (returns `-ENOSYS` when the module isn't loaded), and module-side handlers in `elevator_syscalls.c` |
+| 2026-10-29 | Part 3b: wrote `apply_syscalls.sh` (adds the syscalls to a kernel tree: `syscalls/` directory, top-level Makefile, `syscall_64.tbl`, `syscalls.h`) and `build_kernel.sh` (configure, compile, install); wrote `tests/syscall_test.c` to call the syscalls directly |
+| 2026-11-01 | Connected my system calls to the team's elevator code: forward to `elevator_activate()`, `elevator_queue_request()`, and `elevator_deactivate()`; invalid requests return 1; handlers register last in module init and unregister first in exit |
+| 2026-11-01 | Matched the spec's file layout (`part3/syscalls.c`, kernel `syscalls/` directory); tested `apply_syscalls.sh` against the Linux 6.16 source files and the syscall path in a user-space harness; opened PR #10 |
+
 ### Ermithe Tilusca
 
 | Date | Work Completed / Notes |
@@ -194,7 +201,8 @@ TODO: each member adds dated entries.
 | 2026-10-30 | Implemented the pet linked lists and mutex-protected shared state for the floor queues and elevator passenger list. |
 | 2026-11-01 | Built and verified Part 2: loaded the timer module, checked it with `lsmod`, read current and elapsed time from `/proc/timer`, then unloaded it and confirmed the proc entry was removed. |
 | 2026-11-02 | Ran the Part 1 trace comparison on the VM used for Part 2 and verified that `part1` produced exactly five more system calls than `empty`. |
-| 2026-11-02 | Merged Cole's syscall branch (PR #10) and updated the README with project details, repository structure, and team information. 
+| 2026-11-02 | Merged Cole's syscall branch (PR #10) and updated the README with project details, repository structure, and team information. |
+
 ## Group Meetings
 
 | Date | Attendees | Work Completed / Notes |

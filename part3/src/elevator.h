@@ -31,4 +31,12 @@ void elevator_proc_exit(void);
 int elevator_next_action(void);
 void elevator_complete_action(void);
 
+/*
+ * Connect / disconnect syscalls 548-550 (elevator_syscalls.c). Required order:
+ *   module init: register LAST, so no syscall reaches half-built state
+ *   module exit: unregister FIRST, so no syscall arrives during teardown
+ */
+void elevator_syscalls_register(void);
+void elevator_syscalls_unregister(void);
+
 #endif

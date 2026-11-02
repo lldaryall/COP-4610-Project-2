@@ -12,7 +12,7 @@ if [ ! -f .config ]; then
 	echo "seeding .config from /boot/config-$(uname -r)"
 	cp "/boot/config-$(uname -r)" .config
 	if [ "$LOCALMODCONFIG" = 1 ]; then
-		yes '' | make localmodconfig
+		make localmodconfig < <(yes '')
 	fi
 fi
 

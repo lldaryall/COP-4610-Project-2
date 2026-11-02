@@ -192,8 +192,12 @@ TODO: each member adds dated entries.
 | --- | --- |
 | 2026-10-29 | Added the timer module proc implementation. Used `ktime_get_real_ts64()` to report current time and elapsed time through `/proc/timer`. |
 | 2026-10-30 | Implemented the pet linked lists and mutex-protected shared state for the floor queues and elevator passenger list. |
-| 2026-11-01 | Built and verified Part 2: loaded the timer module, checked it with `lsmod`, read current and elapsed time from `/proc/timer`, then unloaded it and confirmed the proc entry was removed. Commit: `part 2 verify`. |
+| 2026-11-01 | Built and verified Part 2: loaded the timer module, checked it with `lsmod`, read current and elapsed time from `/proc/timer`, then unloaded it and confirmed the proc entry was removed. |
 | 2026-11-02 | Ran the Part 1 trace comparison on the VM used for Part 2 and verified that `part1` produced exactly five more system calls than `empty`. |
 | 2026-11-02 | Merged Cole's syscall branch (PR #10) and updated the README with project details, repository structure, and team information. 
 ## Group Meetings
-TODO: date, attendees, and what was covered.
+
+| Date | Attendees | Work Completed / Notes |
+| --- | --- | --- |
+| 2026-10-14 | Darya Pylypenko, Cole Dunlop, Ermithe Tilusca | Met via Zoom to create and discuss the division of labor. |
+| Ongoing | Darya Pylypenko, Cole Dunlop, Ermithe Tilusca | Continued communicating approximately twice a week to coordinate setup and project work.

@@ -3,8 +3,6 @@
 This project covers system call tracing, a timer kernel module, and an elevator
 kernel module that transports pets between floors.
 
-Project document: https://docs.google.com/document/d/1l4xKTj2uN0BWXK31x9l81HyFRAqtyteGZR2jgpl8Jis/edit?usp=sharing
-
 ## Team Members
 - Darya Pylypenko (dp24s)
 - Cole Dunlop (cjd21d)
@@ -126,6 +124,35 @@ watch -n 1 cat /proc/elevator
 sudo rmmod elevator
 ```
 
+## Elevator Design
+
+**Thread.** One kthread named `elevator` starts at module load and runs until
+unload. Each loop locks the shared mutex, picks the next action, unlocks, sleeps
+for that action's delay, then locks again to apply it. The lock is never held
+while sleeping, so syscalls and `/proc/elevator` reads don't block on a move.
+
+**States.** OFFLINE until `start_elevator()`, then IDLE when there is no work,
+LOADING while pets get on or off, and UP/DOWN while moving. `stop_elevator()`
+stops new boarding, delivers the pets already on board, and then goes OFFLINE.
+Restarting continues from the floor the elevator stopped on.
+
+**Scheduling.** The elevator keeps going in its current direction while there
+is a waiting pet or an onboard pet's destination ahead, and reverses when there
+isn't (a LOOK-style sweep). At each floor it stops if a pet gets off there or
+if the first pet waiting fits. It unloads first, then boards in FIFO order until
+the next pet would exceed 5 pets or 50 lbs. Moving one floor takes 2 s and
+loading takes 1 s.
+
+**Pets.** Weights come from the type: Chihuahua 3 lbs, Pug 14 lbs,
+Pughuahua 10 lbs, Dachshund 16 lbs. Each request is a `kmalloc`'d node on its
+floor's waiting list, moved onto the passenger list when it boards and freed
+when it is delivered. Anything still queued is freed on unload.
+
+**/proc/elevator.** Prints the state, current floor, load weight, and onboard
+pets, then each floor's waiting pets with `[*]` marking the current floor, then
+the onboard, waiting, and serviced counts. It holds the mutex while reading so
+the snapshot is consistent.
+
 ## System Calls
 
 | # | System call | Returns |
@@ -152,6 +179,10 @@ TODO: each member adds dated entries.
 | 2026-10-30 | Integrated Ermithe's pet lists and mutex into the thread and scheduler; moved them into `part3/src/` |
 | 2026-10-30 | `/proc/elevator` in the spec's format; root Makefile |
 | 2026-11-02 | Merged Cole's syscall branch with main and combined the READMEs |
+| 2026-11-02 | Restarting the elevator now continues from the floor it stopped on instead of resetting to floor 1 |
+| 2026-11-02 | Generated `empty.trace` / `part1.trace` (difference of 5); made `KDIR` overridable in the part3 Makefile; added `.gitattributes` so scripts keep Linux line endings |
+| 2026-11-02 | Built Linux 6.16.12 with our syscalls and tested in a VM: timer module, syscall smoke test, producer/consumer run, stress run, and unload while running; no warnings or kernel errors |
+| 2026-11-02 | wrote the Elevator Design section of the README |
 
 ### Cole Dunlop
 
